@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: task-api
+    runtime: docker
+    plan: free
+    region: oregon # Puedes cambiar la región (oregon, ohio, frankfurt, singapore)
+    envVars:
+      - key: PORT
+        value: 8081
+      - key: SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT
+        value: org.hibernate.dialect.PostgreSQLDialect
+      - key: SPRING_DATASOURCE_DRIVER_CLASS_NAME
+        value: org.postgresql.Driver
+      # Las siguientes variables se conectarán automáticamente si usas una BD de Render
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: task-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: task-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: task-db
+          property: password
+
+databases:
+  - name: task-db
+    plan: free
+    region: oregon
