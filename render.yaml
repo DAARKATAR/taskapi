@@ -6,7 +6,7 @@ services:
     region: oregon # Puedes cambiar la región (oregon, ohio, frankfurt, singapore)
     envVars:
       - key: PORT
-        value: 8081
+        value: 10000 # Render prefiere el puerto 10000 por defecto
       - key: SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT
         value: org.hibernate.dialect.PostgreSQLDialect
       - key: SPRING_DATASOURCE_DRIVER_CLASS_NAME
