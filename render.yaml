@@ -15,7 +15,7 @@ services:
       - key: SPRING_DATASOURCE_URL
         fromDatabase:
           name: task-db
-          property: connectionString
+          property: jdbcConnectionString
       - key: SPRING_DATASOURCE_USERNAME
         fromDatabase:
           name: task-db
