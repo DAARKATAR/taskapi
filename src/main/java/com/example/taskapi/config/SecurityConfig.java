@@ -29,10 +29,17 @@ public class SecurityConfig {
         http
             .cors(cors -> cors.configurationSource(request -> {
                 var config = new org.springframework.web.cors.CorsConfiguration();
-                config.setAllowedOrigins(java.util.List.of("http://localhost:5173", "https://my-task-manager-pro-daark.loca.lt", "https://my-task-pro-manager-daark.vercel.app"));
+                config.setAllowedOrigins(java.util.List.of(
+                    "http://localhost:5173", 
+                    "https://my-task-manager-pro-daark.loca.lt", 
+                    "https://my-task-pro-manager-daark.vercel.app",
+                    "https://task-manager-seven-sepia.vercel.app"
+                ));
                 config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                config.setAllowedHeaders(java.util.List.of("*"));
+                config.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
+                config.setExposedHeaders(java.util.List.of("Authorization"));
                 config.setAllowCredentials(true);
+                config.setMaxAge(3600L);
                 return config;
             }))
             .csrf(AbstractHttpConfigurer::disable)
