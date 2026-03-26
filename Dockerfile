@@ -12,8 +12,6 @@ FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 
-# Configuración del puerto que Render utiliza por defecto
-EXPOSE 8081
-
-# Ejecutar la aplicación
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Dejamos que el puerto se defina por la variable de entorno PORT que Render inyecta
+# Ejecutar la aplicación forzando el puerto que nos asigne Render
+ENTRYPOINT ["java", "-Dserver.port=${PORT:10000}", "-jar", "app.jar"]
