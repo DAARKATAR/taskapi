@@ -30,47 +30,12 @@ public class TaskBotService {
 
     @EventListener(ApplicationReadyEvent.class)
     public void onStartup() {
-        log.info("Ejecución inmediata del Bot al iniciar el servidor...");
-        runBotTask();
+        log.info("Bot en espera de recursos de Render.");
     }
 
-    @Scheduled(cron = "0 0 0 * * *") // Una vez al día a medianoche
+    // @Scheduled(cron = "0 0 0 * * *")
     @Transactional
     public void runBotTask() {
-        log.info("Iniciando tarea del Bot Automático...");
-
-        // 1. Buscar y eliminar tareas previas del bot
-        List<Task> existingTasks = taskRepository.findByTitle(TASK_TITLE);
-        if (!existingTasks.isEmpty()) {
-            log.info("Eliminando {} tareas automáticas previas.", existingTasks.size());
-            taskRepository.deleteAll(existingTasks);
-        }
-
-        // 2. Asegurar la existencia del usuario Bot
-        AppUser botUser = userRepository.findByEmail(BOT_EMAIL)
-                .orElseGet(() -> {
-                    log.info("Creando usuario Bot...");
-                    AppUser newUser = AppUser.builder()
-                            .email(BOT_EMAIL)
-                            .name(BOT_NAME)
-                            .googleId("bot-system-id")
-                            .build();
-                    return userRepository.save(newUser);
-                });
-
-        // 3. Crear la nueva tarea
-        Task newTask = Task.builder()
-                .title(TASK_TITLE)
-                .description("Esta es una tarea generada automáticamente cada 30 minutos.")
-                .completed(false)
-                .user(botUser)
-                .date(LocalDate.now())
-                .dueDate(LocalDate.now().plusDays(1))
-                .startTime(LocalTime.now())
-                .endTime(LocalTime.now().plusHours(1))
-                .build();
-
-        taskRepository.save(newTask);
-        log.info("Nueva tarea automática creada exitosamente.");
+        log.info("Bot desactivado por optimización.");
     }
 }
