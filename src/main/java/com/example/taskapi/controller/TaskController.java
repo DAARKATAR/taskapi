@@ -7,6 +7,9 @@ import com.example.taskapi.service.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -32,14 +35,15 @@ public class TaskController {
     }
 
     @GetMapping
-    @Operation(summary = "Get all tasks")
-    public List<TaskResponse> getAll(
+    @Operation(summary = "Get all tasks with pagination")
+    public Page<TaskResponse> getAll(
             @Parameter(description = "Start date for filtering (yyyy-MM-dd)")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @Parameter(description = "End date for filtering (yyyy-MM-dd)")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @PageableDefault(size = 20, sort = "dueDate") Pageable pageable,
             @AuthenticationPrincipal AppUser user) {
-        return service.getAll(startDate, endDate, user);
+        return service.getAll(startDate, endDate, user, pageable);
     }
 
     @GetMapping("/{id}")

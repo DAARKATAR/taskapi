@@ -7,7 +7,10 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Entity
-@Table(name = "tasks")
+@Table(name = "tasks", indexes = {
+    @Index(name = "idx_task_user_id", columnList = "user_id"),
+    @Index(name = "idx_task_due_date", columnList = "due_date")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -28,6 +31,7 @@ public class Task {
     @JoinColumn(name = "user_id", nullable = false)
     private AppUser user;
 
+    @Column(name = "due_date")
     private LocalDate dueDate;
 
     private LocalDate date;

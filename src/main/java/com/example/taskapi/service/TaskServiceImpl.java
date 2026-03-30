@@ -6,6 +6,9 @@ import com.example.taskapi.mapper.TaskMapper;
 import com.example.taskapi.model.AppUser;
 import com.example.taskapi.model.Task;
 import com.example.taskapi.repository.TaskRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -31,17 +34,19 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public List<TaskResponse> getAll(LocalDate startDate, LocalDate endDate, AppUser user) {
-        List<Task> tasks;
+    public Page<TaskResponse> getAll(LocalDate startDate, LocalDate endDate, AppUser user, Pageable pageable) {
+        Page<Task> tasks;
         if (startDate != null && endDate != null) {
-            tasks = repository.findByDueDateBetweenAndUser(startDate, endDate, user);
+            tasks = repository.findByDueDateBetweenAndUser(startDate, endDate, user, pageable);
         } else {
-            tasks = repository.findByUser(user);
+            tasks = repository.findByUser(user, pageable);
         }
         
-        return tasks.stream()
+        List<TaskResponse> responses = tasks.stream()
                 .map(mapper::toResponse)
                 .collect(Collectors.toList());
+        
+        return new PageImpl<>(responses, pageable, tasks.getTotalElements());
     }
 
     @Override
