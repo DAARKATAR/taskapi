@@ -34,7 +34,7 @@ public class TaskBotService {
         runBotTask();
     }
 
-    @Scheduled(cron = "0 */30 * * * *")
+    @Scheduled(cron = "0 0 0 * * *") // Una vez al día a medianoche
     @Transactional
     public void runBotTask() {
         log.info("Iniciando tarea del Bot Automático...");
