@@ -32,9 +32,13 @@ public class TaskController {
     @Operation(summary = "Create a new task")
     public TaskResponse create(@RequestBody TaskRequest request, @AuthenticationPrincipal AppUser user) {
         if (user == null) {
+            System.out.println("[DEBUG_LOG] FAILED: No authenticated user for POST /api/tasks");
             throw new RuntimeException("User not authenticated");
         }
-        return service.create(request, user);
+        System.out.println("[DEBUG_LOG] POST /api/tasks for user: " + user.getEmail() + " | Title: " + request.getTitle());
+        TaskResponse response = service.create(request, user);
+        System.out.println("[DEBUG_LOG] Task created with ID: " + response.getId());
+        return response;
     }
 
     @GetMapping
@@ -47,9 +51,13 @@ public class TaskController {
             @PageableDefault(size = 100, sort = "dueDate") Pageable pageable,
             @AuthenticationPrincipal AppUser user) {
         if (user == null) {
+            System.out.println("[DEBUG_LOG] FAILED: No authenticated user for GET /api/tasks");
             throw new RuntimeException("User not authenticated");
         }
-        return service.getAll(startDate, endDate, user, pageable);
+        System.out.println("[DEBUG_LOG] GET /api/tasks request for user: " + user.getEmail() + " (ID: " + user.getId() + ")");
+        Page<TaskResponse> result = service.getAll(startDate, endDate, user, pageable);
+        System.out.println("[DEBUG_LOG] Returning " + result.getNumberOfElements() + " tasks for user: " + user.getEmail());
+        return result;
     }
 
     @GetMapping("/{id}")
