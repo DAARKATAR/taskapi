@@ -75,13 +75,29 @@ public class JwtFilter extends OncePerRequestFilter {
                     GoogleIdToken idToken = verifier.verify(token);
                     if (idToken != null) {
                         GoogleIdToken.Payload payload = idToken.getPayload();
+                        
+                        // Log additional payload fields for debugging
+                        System.out.println("[DEBUG_LOG] Payload Audience: " + payload.getAudience());
+                        System.out.println("[DEBUG_LOG] Payload Authorized Party (azp): " + payload.getAuthorizedParty());
+                        System.out.println("[DEBUG_LOG] Payload Subject (sub): " + payload.getSubject());
+
                         String email = payload.getEmail();
                         String name = (String) payload.get("name");
                         String googleId = payload.getSubject();
 
                         if (email != null) {
                             System.out.println("[DEBUG_LOG] Valid token for email: " + email);
-                            AppUser user = userRepository.findByEmail(email).orElseGet(() -> {
+                            AppUser user = userRepository.findByEmail(email).map(existingUser -> {
+                                if (existingUser.getGoogleId() == null || !existingUser.getGoogleId().equals(googleId)) {
+                                    System.out.println("[DEBUG_LOG] Updating Google ID for existing user: " + email);
+                                    existingUser.setGoogleId(googleId);
+                                    if (name != null && existingUser.getName() == null) {
+                                        existingUser.setName(name);
+                                    }
+                                    return userRepository.save(existingUser);
+                                }
+                                return existingUser;
+                            }).orElseGet(() -> {
                                 System.out.println("[DEBUG_LOG] Auto-registering user: " + email);
                                 AppUser newUser = AppUser.builder()
                                         .email(email)
@@ -100,6 +116,8 @@ public class JwtFilter extends OncePerRequestFilter {
                         }
                     } else {
                         System.out.println("[DEBUG_LOG] Token verification failed (idToken is null). Check Google client ID.");
+                        // Try a manual check if possible (might be some other reason for null)
+                        System.out.println("[DEBUG_LOG] Potential cause: Token expired, audience mismatch, or issuer mismatch.");
                         // Opcional: Para depuración, si el token es MOCK pero no fue capturado arriba
                         if (token.startsWith("MOCK_")) {
                              System.out.println("[DEBUG_LOG] MOCK token detected but didn't match the exact 'MOCK_JWT_TOKEN'.");
