@@ -38,13 +38,40 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public Page<TaskResponse> getAll(LocalDate startDate, LocalDate endDate, AppUser user, Pageable pageable) {
+        System.out.println("[DEBUG_LOG] Searching tasks for user ID: " + user.getId() + " | Email: " + user.getEmail());
+        
         Page<Task> tasks;
         if (startDate != null && endDate != null) {
             tasks = repository.findByDueDateBetweenAndUser(startDate, endDate, user, pageable);
         } else {
             tasks = repository.findByUser(user, pageable);
+        }
+        
+        // RECUPERACIÓN DE EMERGENCIA: Si no hay tareas por ID de usuario, buscar por email
+        if (tasks.getTotalElements() == 0) {
+            System.out.println("[DEBUG_LOG] No tasks found for user ID " + user.getId() + ". Attempting recovery by Email: " + user.getEmail());
+            List<Task> recoveredTasks = repository.findByUserEmail(user.getEmail());
+            if (!recoveredTasks.isEmpty()) {
+                System.out.println("[DEBUG_LOG] RECOVERED " + recoveredTasks.size() + " tasks by email. Re-linking to user ID: " + user.getId());
+                // Re-vincular las tareas al usuario actual (esto corrige desajustes de base de datos)
+                for (Task t : recoveredTasks) {
+                    if (!t.getUser().getId().equals(user.getId())) {
+                        t.setUser(user);
+                        repository.save(t);
+                    }
+                }
+                repository.flush();
+                // Re-ejecutar la búsqueda original ahora que están vinculadas
+                if (startDate != null && endDate != null) {
+                    tasks = repository.findByDueDateBetweenAndUser(startDate, endDate, user, pageable);
+                } else {
+                    tasks = repository.findByUser(user, pageable);
+                }
+            } else {
+                System.out.println("[DEBUG_LOG] No tasks found even by email for: " + user.getEmail());
+            }
         }
         
         List<TaskResponse> responses = tasks.stream()
