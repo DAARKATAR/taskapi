@@ -38,13 +38,18 @@ public class JwtFilter extends OncePerRequestFilter {
             String token = authHeader.substring(7);
             System.out.println("[DEBUG_LOG] Token (first 20 chars): " + (token.length() > 20 ? token.substring(0, 20) : token));
 
-            if ("MOCK_JWT_TOKEN".equals(token) || "MOCK_TOKEN".equals(token)) {
+            if ("MOCK_JWT_TOKEN".equals(token) || "MOCK_TOKEN".equals(token) || token.startsWith("MOCK_")) {
                 System.out.println("[DEBUG_LOG] Mock Token detected: " + token);
                 String email = "test_user@example.com";
-                AppUser user = userRepository.findByEmail(email).orElseGet(() -> {
-                    System.out.println("[DEBUG_LOG] Creating new test user: " + email);
+                String finalEmail = email;
+                if (token.contains("@")) {
+                    finalEmail = token.replace("MOCK_", "");
+                }
+                String userEmail = finalEmail;
+                AppUser user = userRepository.findByEmail(userEmail).orElseGet(() -> {
+                    System.out.println("[DEBUG_LOG] Creating new test user: " + userEmail);
                     AppUser newUser = AppUser.builder()
-                            .email(email)
+                            .email(userEmail)
                             .name("Test User")
                             .googleId("mock-google-id")
                             .build();
@@ -54,7 +59,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         user, null, Collections.emptyList());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                System.out.println("[DEBUG_LOG] Authentication set for user: " + email);
+                System.out.println("[DEBUG_LOG] Authentication set for user: " + userEmail);
             } else {
                 try {
                     if (clientId == null || clientId.isEmpty() || "REPLACE_WITH_YOUR_CLIENT_ID".equals(clientId)) {
@@ -95,6 +100,10 @@ public class JwtFilter extends OncePerRequestFilter {
                         }
                     } else {
                         System.out.println("[DEBUG_LOG] Token verification failed (idToken is null). Check Google client ID.");
+                        // Opcional: Para depuración, si el token es MOCK pero no fue capturado arriba
+                        if (token.startsWith("MOCK_")) {
+                             System.out.println("[DEBUG_LOG] MOCK token detected but didn't match the exact 'MOCK_JWT_TOKEN'.");
+                        }
                     }
                 } catch (Exception e) {
                     System.out.println("[DEBUG_LOG] Error validando token de Google: " + e.getMessage());

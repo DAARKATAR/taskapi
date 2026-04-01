@@ -31,6 +31,9 @@ public class TaskController {
     @PostMapping
     @Operation(summary = "Create a new task")
     public TaskResponse create(@RequestBody TaskRequest request, @AuthenticationPrincipal AppUser user) {
+        if (user == null) {
+            throw new RuntimeException("User not authenticated");
+        }
         return service.create(request, user);
     }
 
@@ -41,8 +44,11 @@ public class TaskController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @Parameter(description = "End date for filtering (yyyy-MM-dd)")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @PageableDefault(size = 20, sort = "dueDate") Pageable pageable,
+            @PageableDefault(size = 100, sort = "dueDate") Pageable pageable,
             @AuthenticationPrincipal AppUser user) {
+        if (user == null) {
+            throw new RuntimeException("User not authenticated");
+        }
         return service.getAll(startDate, endDate, user, pageable);
     }
 
