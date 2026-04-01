@@ -68,11 +68,39 @@ public class JwtFilter extends OncePerRequestFilter {
                         return;
                     }
                     System.out.println("[DEBUG_LOG] Validating Google Token with client ID: " + clientId);
+                    
+                    // Verifier with relaxed checks for cross-platform (Web and Android/iOS)
                     GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
                             .setAudience(Collections.singletonList(clientId))
                             .build();
 
-                    GoogleIdToken idToken = verifier.verify(token);
+                    GoogleIdToken idToken = null;
+                    try {
+                        idToken = verifier.verify(token);
+                    } catch (Exception e) {
+                        System.out.println("[DEBUG_LOG] Token verification error: " + e.getMessage());
+                    }
+
+                    if (idToken == null) {
+                        System.out.println("[DEBUG_LOG] idToken is null. Trying manual parse to debug payload.");
+                        try {
+                            // Manual extraction if verification fails, ONLY for debugging purposes
+                            // In a real app we shouldn't trust unverified tokens, but here we need to know WHY it fails
+                            String[] parts = token.split("\\.");
+                            if (parts.length >= 2) {
+                                String payloadJson = new String(java.util.Base64.getUrlDecoder().decode(parts[1]));
+                                System.out.println("[DEBUG_LOG] Unverified Payload: " + payloadJson);
+                                
+                                // Check if it's an Access Token instead of ID Token
+                                if (payloadJson.contains("\"exp\"") == false && payloadJson.contains("\"iat\"") == false) {
+                                    System.out.println("[DEBUG_LOG] CRITICAL: Token does not look like a JWT ID Token. Is it an Oauth2 Access Token?");
+                                }
+                            }
+                        } catch (Exception ex) {
+                            System.out.println("[DEBUG_LOG] Failed to manually parse token: " + ex.getMessage());
+                        }
+                    }
+
                     if (idToken != null) {
                         GoogleIdToken.Payload payload = idToken.getPayload();
                         
@@ -91,7 +119,7 @@ public class JwtFilter extends OncePerRequestFilter {
                                 if (existingUser.getGoogleId() == null || !existingUser.getGoogleId().equals(googleId)) {
                                     System.out.println("[DEBUG_LOG] Updating Google ID for existing user: " + email);
                                     existingUser.setGoogleId(googleId);
-                                    if (name != null && existingUser.getName() == null) {
+                                    if (name != null && (existingUser.getName() == null || existingUser.getName().equals("Test User"))) {
                                         existingUser.setName(name);
                                     }
                                     return userRepository.save(existingUser);
@@ -118,10 +146,20 @@ public class JwtFilter extends OncePerRequestFilter {
                         System.out.println("[DEBUG_LOG] Token verification failed (idToken is null). Check Google client ID.");
                         // Try a manual check if possible (might be some other reason for null)
                         System.out.println("[DEBUG_LOG] Potential cause: Token expired, audience mismatch, or issuer mismatch.");
-                        // Opcional: Para depuración, si el token es MOCK pero no fue capturado arriba
-                        if (token.startsWith("MOCK_")) {
-                             System.out.println("[DEBUG_LOG] MOCK token detected but didn't match the exact 'MOCK_JWT_TOKEN'.");
-                        }
+                        
+                        // DEBUG MODE: Only for recovery, if email exists in payload but verification failed due to Audience
+                        // We will allow it JUST for identifying the issue in logs
+                        try {
+                            String[] parts = token.split("\\.");
+                            if (parts.length >= 2) {
+                                String payloadJson = new String(java.util.Base64.getUrlDecoder().decode(parts[1]));
+                                if (payloadJson.contains(clientId)) {
+                                    System.out.println("[DEBUG_LOG] Token contains Client ID in string but verification failed. Issuer might be the issue.");
+                                } else {
+                                    System.out.println("[DEBUG_LOG] Token DOES NOT contain the configured Client ID. Audience mismatch is certain.");
+                                }
+                            }
+                        } catch (Exception e) {}
                     }
                 } catch (Exception e) {
                     System.out.println("[DEBUG_LOG] Error validando token de Google: " + e.getMessage());
