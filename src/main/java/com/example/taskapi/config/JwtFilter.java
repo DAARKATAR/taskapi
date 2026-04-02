@@ -30,6 +30,16 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        String path = request.getRequestURI();
+        
+        // IGNORAR RUTAS DE ADMIN: No validar JWT para los endpoints de administración,
+        // ya que ellos usan su propia seguridad mediante el header X-Admin-Secret.
+        if (path.startsWith("/api/admin/")) {
+            System.out.println("[DEBUG_LOG] Skipping JWT Filter for Admin path: " + path);
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String authHeader = request.getHeader("Authorization");
         
         System.out.println("[DEBUG_LOG] Request to: " + request.getRequestURI() + " with Authorization header: " + authHeader);
