@@ -19,4 +19,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     // Nueva consulta para recuperación de tareas huérfanas o mal vinculadas
     @org.springframework.data.jpa.repository.Query("SELECT t FROM Task t WHERE t.user.email = :email")
     List<Task> findByUserEmail(@org.springframework.data.repository.query.Param("email") String email);
+
+    long countByCompletedTrue();
 }

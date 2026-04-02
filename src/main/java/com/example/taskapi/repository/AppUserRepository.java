@@ -12,4 +12,6 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
     
     @org.springframework.data.jpa.repository.Query("SELECT u.email FROM AppUser u")
     java.util.List<String> findAllEmails();
+
+    long countByCreatedAtAfter(java.time.LocalDateTime date);
 }

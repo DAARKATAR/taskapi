@@ -21,4 +21,8 @@ public class AppUser {
     private String name;
 
     private String googleId;
+
+    @org.hibernate.annotations.CreationTimestamp
+    @Column(updatable = false)
+    private java.time.LocalDateTime createdAt;
 }
