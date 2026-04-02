@@ -25,4 +25,6 @@ public class AppUser {
     @org.hibernate.annotations.CreationTimestamp
     @Column(updatable = false)
     private java.time.LocalDateTime createdAt;
+
+    private String country;
 }

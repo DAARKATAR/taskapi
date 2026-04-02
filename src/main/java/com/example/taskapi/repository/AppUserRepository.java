@@ -14,4 +14,8 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
     java.util.List<String> findAllEmails();
 
     long countByCreatedAtAfter(java.time.LocalDateTime date);
+
+    @org.springframework.data.jpa.repository.Query("SELECT u.country as country, COUNT(u) as count FROM AppUser u " +
+            "WHERE u.country IS NOT NULL GROUP BY u.country ORDER BY count DESC")
+    java.util.List<Object[]> findTopCountries();
 }

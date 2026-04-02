@@ -14,9 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -59,7 +61,23 @@ public class AdminController {
         stats.put("completedTasks", taskRepository.countByCompletedTrue());
         stats.put("newUsersToday", userRepository.countByCreatedAtAfter(todayStart));
 
-        System.out.println("[DEBUG_LOG] Admin success: Returning stats Dashboard");
-        return ResponseEntity.ok(stats);
+        // Obtener Top Countries (Max 5)
+        List<Object[]> topCountriesData = userRepository.findTopCountries();
+        List<Map<String, Object>> topCountries = topCountriesData.stream()
+                .limit(5)
+                .map(obj -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("country", obj[0]);
+                    map.put("count", obj[1]);
+                    return map;
+                })
+                .collect(Collectors.toList());
+
+        Map<String, Object> response = new HashMap<>();
+        response.putAll(stats.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+        response.put("topCountries", topCountries);
+
+        System.out.println("[DEBUG_LOG] Admin success: Returning stats Dashboard with Top Countries");
+        return ResponseEntity.ok(response);
     }
 }
