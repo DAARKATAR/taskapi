@@ -9,4 +9,7 @@ import java.util.Optional;
 @Repository
 public interface AppUserRepository extends JpaRepository<AppUser, Long> {
     Optional<AppUser> findByEmail(String email);
+    
+    @org.springframework.data.jpa.repository.Query("SELECT u.email FROM AppUser u")
+    java.util.List<String> findAllEmails();
 }
